@@ -16,7 +16,7 @@ app.on("ready", () => {
 });
 
 exports.getFileFromUser = () => {
-  const files = dialog.showOpenDialog({
+  const files = dialog.showOpenDialog(mainWindow, {
     properties: ["openFile"],
     buttonLabel: "Unveil",
     filters: [
@@ -38,7 +38,45 @@ exports.getFileFromUser = () => {
   openFile(file);
 };
 
-const openFile = (file) => {
-  const content = fs.readFileSync(file).toString();
-  mainWindow.webContents.send("file-opened", file, content);
+exports.saveMarkdown = (file, content) => {
+  if (!file) {
+    file = dialog.showSaveDialog(mainWindow, {
+      title: "Save Markdown",
+      defaultPath: app.getPath("desktop"),
+      filters: [
+        {
+          name: "Markdown Files",
+          extensions: ["md", "markdown", "mdown", "marcdown"],
+        },
+      ],
+    });
+  }
+
+  if (!file) return;
+
+  fs.writeFileSync(file, content);
+  openFile(file);
 };
+
+exports.saveHtml = (content) => {
+  const file = dialog.showSaveDialog(mainWindow, {
+    title: "Save HTML",
+    defaultPath: app.getPath("desktop"),
+    filters: [
+      {
+        name: "HTML Files",
+        extensions: ["html", "htm"],
+      },
+    ],
+  });
+
+  if (!file) return;
+
+  fs.writeFileSync(file, content);
+};
+
+const openFile = (exports.openFile = (file) => {
+  const content = fs.readFileSync(file).toString();
+  app.addRecentDocument(file);
+  mainWindow.webContents.send("file-opened", file, content);
+});
